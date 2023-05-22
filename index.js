@@ -59,7 +59,7 @@ async function run() {
       const user = req.body;
       console.log(user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '1h',
+        expiresIn: "1h",
       });
       console.log(token);
 
@@ -68,7 +68,21 @@ async function run() {
 
     //get data from collection or db (api)
     app.get("/services", async (req, res) => {
-      const cursor = servicesCollection.find();
+      const sort = req.query.sort;
+      const search = req.query.search;
+      console.log(search);
+      const query = {
+        title: { $regex: search, $options: "i" },
+      };
+
+      //if we query logical operator orting
+      // const query = { price: { $lt: 100 } };
+      //normal query sorting
+      // const query = {};
+      const options = {
+        sort: { price: sort === "asc" ? 1 : -1 },
+      };
+      const cursor = servicesCollection.find(query, options);
       const result = await cursor.toArray();
       // const result =await servicesCollection.find().toArray();
       res.send(result);
@@ -86,9 +100,9 @@ async function run() {
       //booking collection get from db
       app.get("/getbookings", verifyJWT, async (req, res) => {
         const decoded = req.decoded;
-        console.log('decoded inside', decoded);
+        console.log("decoded inside", decoded);
         if (decoded.email !== req.query.email) {
-          return res.status(403).send({error:1,message:'forbiden access'})
+          return res.status(403).send({ error: 1, message: "forbiden access" });
         }
         let query = {};
         if (req.query?.email) {
